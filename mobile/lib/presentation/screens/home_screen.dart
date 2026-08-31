@@ -7,9 +7,11 @@ import '../providers/attendance_provider.dart';
 import '../providers/timer_provider.dart';
 import '../providers/time_entries_provider.dart';
 import '../providers/projects_provider.dart';
+import '../providers/recent_work_provider.dart';
 import '../providers/user_prefs_provider.dart';
 import 'package:timetracker_mobile/utils/date_format_utils.dart';
 import '../widgets/empty_state.dart';
+import '../widgets/recent_quick_start.dart';
 import '../widgets/workday_card.dart';
 import 'timer_screen.dart';
 import 'projects_screen.dart';
@@ -19,14 +21,14 @@ import 'finance_workforce_screen.dart';
 import 'more_hub_screen.dart';
 import 'dart:async';
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends ConsumerState<HomeScreen> {
   int _currentIndex = 0;
 
   final List<Widget> _screens = [
@@ -86,17 +88,42 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
       floatingActionButton: _currentIndex == 0
-          ? FloatingActionButton.extended(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const TimerScreen(),
+          ? GestureDetector(
+              // Long-press instantly restarts the most recent project/task
+              // combination; tap opens the full start flow.
+              onLongPress: () async {
+                final recents = ref.read(recentWorkProvider).items;
+                if (recents.isEmpty) return;
+                final messenger = ScaffoldMessenger.of(context);
+                await ref.read(timerProvider.notifier).startTimer(
+                      projectId: recents.first.projectId,
+                      clientId: recents.first.clientId,
+                      taskId: recents.first.taskId,
+                    );
+                final err = ref.read(timerProvider).error;
+                messenger.hideCurrentSnackBar();
+                messenger.showSnackBar(
+                  SnackBar(
+                    content: Text(err != null
+                        ? err
+                        : 'Started: ${recents.first.title}'),
+                    behavior: SnackBarBehavior.floating,
                   ),
                 );
               },
-              icon: const Icon(Icons.play_arrow),
-              label: const Text('Start Timer'),
+              child: FloatingActionButton.extended(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const TimerScreen(),
+                    ),
+                  );
+                },
+                tooltip: 'Start timer (long-press: resume last)',
+                icon: const Icon(Icons.play_arrow),
+                label: const Text('Start Timer'),
+              ),
             )
           : null,
     );
@@ -127,6 +154,7 @@ class _DashboardTabState extends ConsumerState<DashboardTab> {
       ref.read(timerProvider.notifier).checkTimerStatus();
       ref.read(attendanceProvider.notifier).refresh();
       ref.read(projectsProvider.notifier).loadProjects();
+      ref.read(recentWorkProvider.notifier).refresh();
       final now = DateTime.now();
       ref.read(timeEntriesProvider.notifier).loadTimeEntries(
         startDate: now.toIso8601String().split('T')[0],
@@ -231,6 +259,12 @@ class _DashboardTabState extends ConsumerState<DashboardTab> {
               ),
             ),
             const SizedBox(height: AppSpacing.md),
+            // Quick restart of recent project/task combinations (hidden while
+            // a timer runs — single-active-timer mode would reject it anyway).
+            if (!timerState.isRunning) ...[
+              const RecentQuickStart(),
+              const SizedBox(height: AppSpacing.md),
+            ],
             const WorkdayCard(),
             const SizedBox(height: AppSpacing.md),
             // Today's Summary Card
@@ -282,6 +316,13 @@ class _DashboardTabState extends ConsumerState<DashboardTab> {
             else
               ...entriesState.entries.take(5).map((entry) {
                 final projectName = _entryLabel(entry, projectsState.projects);
+                final taskName =
+                    (entry.task != null && entry.task!.trim().isNotEmpty)
+                        ? entry.task!.trim()
+                        : null;
+                final title = taskName != null
+                    ? '$projectName · $taskName'
+                    : projectName;
                 final subtitle = (entry.notes != null && entry.notes!.trim().isNotEmpty)
                     ? entry.notes!.trim()
                     : formatDateRange(
@@ -296,7 +337,7 @@ class _DashboardTabState extends ConsumerState<DashboardTab> {
                       child: const Icon(Icons.timer),
                     ),
                     title: Text(
-                      projectName,
+                      title,
                       style: projectName == 'Unknown project'
                           ? theme.textTheme.bodyMedium?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant,

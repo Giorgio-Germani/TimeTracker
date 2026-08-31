@@ -18,6 +18,8 @@ class TimeEntry {
   final String? project;
   /// Denormalized client name from API.
   final String? client;
+  /// Denormalized task name from API.
+  final String? task;
 
   const TimeEntry({
     required this.id,
@@ -37,6 +39,7 @@ class TimeEntry {
     this.updatedAt,
     this.project,
     this.client,
+    this.task,
   });
 
   /// Display label: project name, else client name, else a fallback.
@@ -67,6 +70,7 @@ class TimeEntry {
       updatedAt: _parseDt(json['updated_at']),
       project: json['project']?.toString(),
       client: json['client']?.toString(),
+      task: json['task']?.toString(),
     );
   }
 
@@ -88,6 +92,7 @@ class TimeEntry {
         'updated_at': updatedAt?.toIso8601String(),
         'project': project,
         'client': client,
+        'task': task,
       };
 
   String get formattedDuration {
