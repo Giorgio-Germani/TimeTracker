@@ -105,6 +105,7 @@ class TimerNotifier extends StateNotifier<TimerState> {
         active: timer != null && !(timer.isPaused),
         idleTimeoutMinutes: status.idleTimeoutMinutes,
         idleNotified: status.idleNotified,
+        needsReview: status.needsReview,
       );
       await _syncNotificationWithState();
     } catch (e) {

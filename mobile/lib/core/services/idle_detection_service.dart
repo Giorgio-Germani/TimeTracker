@@ -16,8 +16,11 @@ import 'package:timetracker_mobile/domain/repositories/time_tracking_repository.
 ///
 /// When the app is backgrounded, polls the server for ``idle_notified`` (nudged
 /// by the Android foreground task) so the local notification still fires.
-/// When the app is killed, the server-side `check_idle_timers` job is the
-/// safety net (requires heartbeats to have been flowing while the app was open).
+/// When the grace window expires unanswered, the timer KEEPS RUNNING and a
+/// "needs review" notification is shown instead of auto-stopping — recorded
+/// time is never silently truncated. When the app is killed, the server-side
+/// `check_idle_timers` job flags the timer for review (requires heartbeats to
+/// have been flowing while the app was open).
 class IdleDetectionService with WidgetsBindingObserver {
   IdleDetectionService._();
 
@@ -41,6 +44,7 @@ class IdleDetectionService with WidgetsBindingObserver {
   bool _inForeground = true;
   bool _taskDataCallbackRegistered = false;
   DateTime? _idleStopAt;
+  bool _needsReviewShown = false;
 
   bool get isRunning => _started;
 
@@ -83,6 +87,7 @@ class IdleDetectionService with WidgetsBindingObserver {
     required bool active,
     int? idleTimeoutMinutes,
     bool idleNotified = false,
+    bool needsReview = false,
   }) async {
     _timerActive = active;
     if (idleTimeoutMinutes != null && idleTimeoutMinutes >= 1) {
@@ -92,11 +97,24 @@ class IdleDetectionService with WidgetsBindingObserver {
     }
     if (!active) {
       _cancelGrace();
+      _needsReviewShown = false;
       await NotificationService.instance.cancelIdlePrompt();
       return;
     }
-    if (idleNotified && !_promptShown) {
+    if (needsReview) {
+      if (!_needsReviewShown && !_promptShown) {
+        _needsReviewShown = true;
+        await NotificationService.instance.showNeedsReviewNotification();
+      }
+      return;
+    }
+    if (!needsReview && !idleNotified) {
+      // Activity resumed (server flags cleared) — re-arm idle prompting.
+      _needsReviewShown = false;
+    }
+    if (idleNotified && !_promptShown && !_needsReviewShown) {
       // Server already waited idle_timeout; credit that window (Issue #722).
+      // Never re-arms once the review flag was shown for this stretch.
       _idleStopAt = _creditedStopAt(_lastActivity);
       await _showPrompt();
     }
@@ -224,6 +242,7 @@ class IdleDetectionService with WidgetsBindingObserver {
         active: active,
         idleTimeoutMinutes: status.idleTimeoutMinutes,
         idleNotified: status.idleNotified,
+        needsReview: status.needsReview,
       );
     } catch (e) {
       debugPrint('IdleDetectionService background poll failed: $e');
@@ -238,8 +257,18 @@ class IdleDetectionService with WidgetsBindingObserver {
     );
     _graceTimer?.cancel();
     _graceTimer = Timer(gracePeriod, () {
-      respondToIdlePrompt(IdlePromptAction.stop);
+      _flagNeedsReview();
     });
+  }
+
+  /// Grace expired unanswered: keep the timer running, flag for review.
+  Future<void> _flagNeedsReview() async {
+    _graceTimer?.cancel();
+    _graceTimer = null;
+    _promptShown = false;
+    _idleStopAt = null;
+    _needsReviewShown = true;
+    await NotificationService.instance.showNeedsReviewNotification();
   }
 
   void _cancelGrace() {

@@ -41,25 +41,29 @@ class TimeTrackingRepository {
   }
 
   /// Timer status plus idle metadata from `/api/v1/timer/status`.
-  Future<({Timer? timer, int? idleTimeoutMinutes, bool idleNotified})>
+  // ignore: lines_longer_than_80_chars
+  Future<({Timer? timer, int? idleTimeoutMinutes, bool idleNotified, bool needsReview})>
       getTimerStatusDetailed() async {
     if (apiClient == null) {
       final cached = await LocalStorage.getTimer();
-      return (timer: cached, idleTimeoutMinutes: null, idleNotified: false);
+      return (timer: cached, idleTimeoutMinutes: null, idleNotified: false, needsReview: false);
     }
 
     try {
       final isOnline = await _isOnline();
       if (!isOnline) {
         final cached = await LocalStorage.getTimer();
-        return (timer: cached, idleTimeoutMinutes: null, idleNotified: false);
+        return (timer: cached, idleTimeoutMinutes: null, idleNotified: false, needsReview: false);
       }
 
       final response = await apiClient!.getTimerStatus();
       final idleTimeout = (response['idle_timeout_minutes'] as num?)?.toInt();
+      final timerMap =
+          response['timer'] is Map ? response['timer'] as Map : null;
       final idleNotified = response['idle_notified'] == true ||
-          (response['timer'] is Map &&
-              (response['timer'] as Map)['idle_notified'] == true);
+          (timerMap?['idle_notified'] == true);
+      final needsReview = response['needs_review'] == true ||
+          (timerMap?['needs_review'] == true);
       if (response['active'] == true && response['timer'] != null) {
         final timer = Timer.fromJson(response['timer'] as Map<String, dynamic>);
         await LocalStorage.saveTimer(timer);
@@ -67,6 +71,7 @@ class TimeTrackingRepository {
           timer: timer,
           idleTimeoutMinutes: idleTimeout,
           idleNotified: idleNotified,
+          needsReview: needsReview,
         );
       }
       await LocalStorage.clearTimer();
@@ -74,10 +79,11 @@ class TimeTrackingRepository {
         timer: null,
         idleTimeoutMinutes: idleTimeout,
         idleNotified: false,
+        needsReview: false,
       );
     } catch (e) {
       final cached = await LocalStorage.getTimer();
-      return (timer: cached, idleTimeoutMinutes: null, idleNotified: false);
+      return (timer: cached, idleTimeoutMinutes: null, idleNotified: false, needsReview: false);
     }
   }
 

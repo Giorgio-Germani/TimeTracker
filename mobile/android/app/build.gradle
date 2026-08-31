@@ -56,6 +56,19 @@ android {
         versionName flutterVersionName
     }
 
+    // "dev" flavor installs side-by-side with the production build
+    // (applicationId suffix + separate launcher label).
+    flavorDimensions "env"
+    productFlavors {
+        prod {
+            dimension "env"
+        }
+        dev {
+            dimension "env"
+            applicationIdSuffix ".dev"
+        }
+    }
+
     signingConfigs {
         release {
             keyAlias keyProperties['keyAlias']

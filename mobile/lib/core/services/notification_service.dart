@@ -287,7 +287,7 @@ class NotificationService {
 
       const title = 'Still working?';
       final body =
-          'Your timer will stop in $graceMinutes minutes if you do not answer.';
+          'Answer within $graceMinutes minutes or the timer will be flagged for review (it keeps running).';
 
       final details = NotificationDetails(
         android: AndroidNotificationDetails(
@@ -331,6 +331,50 @@ class NotificationService {
       _idlePromptShowing = true;
     } catch (e, st) {
       debugPrint('NotificationService.showIdlePrompt failed: $e\n$st');
+    }
+  }
+
+  /// "Timer needs review" notification: idle grace expired unanswered.
+  /// The timer keeps running server-side; the user resolves it in the app.
+  Future<void> showNeedsReviewNotification() async {
+    try {
+      if (!_initialized) {
+        await initialize();
+      }
+
+      const title = 'Timer needs review';
+      const body =
+          'You were idle and did not answer. Your timer kept running — open TimeTracker to trim the idle time or stop it.';
+
+      final details = NotificationDetails(
+        android: AndroidNotificationDetails(
+          AppConstants.idleReminderChannelId,
+          AppConstants.idleReminderChannelName,
+          channelDescription: AppConstants.idleReminderChannelDescription,
+          importance: Importance.high,
+          priority: Priority.high,
+          category: AndroidNotificationCategory.alarm,
+          ongoing: true,
+          autoCancel: true,
+        ),
+        iOS: const DarwinNotificationDetails(
+          presentAlert: true,
+          presentBadge: true,
+          presentSound: true,
+          interruptionLevel: InterruptionLevel.timeSensitive,
+        ),
+      );
+
+      await _localNotifications.show(
+        AppConstants.notificationIdleReminder,
+        title,
+        body,
+        details,
+        payload: 'idle_needs_review',
+      );
+      _idlePromptShowing = true;
+    } catch (e, st) {
+      debugPrint('NotificationService.showNeedsReviewNotification failed: $e\n$st');
     }
   }
 
