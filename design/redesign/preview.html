@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TimeTracker — New App Concept</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --blue:#0A84FF; --blue-soft:#E5F1FF; --green:#30D158; --orange:#FF9F0A; --red:#FF453A;
+    --bg:#F2F2F7; --card:#FFFFFF; --label:#1C1C1E; --secondary:#8E8E93; --tertiary:#C7C7CC;
+    --sep:#E5E5EA; --radius:18px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-font-smoothing:antialiased}
+  body{background:#E9EAEE;font-family:"Inter",-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--label);padding:48px 32px 80px}
+  h1{font-size:34px;font-weight:800;letter-spacing:-.5px;text-align:center;margin-bottom:8px}
+  .sub{color:var(--secondary);text-align:center;font-size:15px;max-width:640px;margin:0 auto 56px;line-height:1.5}
+  .section{max-width:1600px;margin:0 auto 24px}
+  .section h2{font-size:20px;font-weight:700;margin:40px 0 16px;letter-spacing:-.3px}
+  .grid{display:flex;flex-wrap:wrap;gap:40px;justify-content:center}
+
+  /* ---------- Phone frame ---------- */
+  .phone{width:375px;flex:0 0 auto}
+  .frame{width:375px;height:812px;background:var(--bg);border-radius:54px;border:10px solid #111;
+    box-shadow:0 30px 60px rgba(0,0,0,.25);overflow:hidden;position:relative;display:flex;flex-direction:column}
+  .caption{margin-top:16px}
+  .caption .t{font-weight:700;font-size:16px}
+  .caption .d{font-size:13px;color:var(--secondary);margin-top:3px;line-height:1.45}
+  .notch{position:absolute;top:10px;left:50%;transform:translateX(-50%);width:140px;height:28px;background:#111;border-radius:16px;z-index:50}
+  .statusbar{height:48px;display:flex;justify-content:space-between;align-items:flex-end;padding:0 26px 4px;font-size:14px;font-weight:600;flex:0 0 auto}
+  .statusbar .right{display:flex;gap:5px;align-items:center}
+  .content{flex:1;overflow:hidden;position:relative;display:flex;flex-direction:column}
+
+  /* ---------- Shared iOS pieces ---------- */
+  .navbar{display:flex;align-items:center;justify-content:space-between;padding:6px 20px 10px;flex:0 0 auto}
+  .navbar .big{font-size:30px;font-weight:800;letter-spacing:-.6px}
+  .navbar .small{font-size:16px;font-weight:600}
+  .navlink{color:var(--blue);font-size:16px;font-weight:500;display:flex;align-items:center;gap:3px}
+  .scroll{flex:1;overflow:hidden;padding:0 16px}
+  .tabbar{flex:0 0 auto;background:rgba(249,249,249,.92);border-top:.5px solid var(--sep);
+    display:flex;justify-content:space-around;padding:8px 0 22px;position:relative}
+  .tab{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;font-weight:600;color:var(--secondary);width:64px}
+  .tab.active{color:var(--blue)}
+  .tab svg{width:25px;height:25px}
+  .card{background:var(--card);border-radius:var(--radius);box-shadow:0 1px 2px rgba(0,0,0,.04)}
+  .list{background:var(--card);border-radius:var(--radius);overflow:hidden}
+  .row{display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:.5px solid var(--sep);font-size:16px}
+  .row:last-child{border-bottom:none}
+  .row .grow{flex:1;min-width:0}
+  .row .title{font-weight:500}
+  .row .sub2{font-size:13px;color:var(--secondary);margin-top:2px}
+  .row .val{color:var(--secondary);font-size:15px}
+  .chev{color:var(--tertiary);font-size:18px;font-weight:600}
+  .icon-tile{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:15px;flex:0 0 auto}
+  .sec-title{font-size:13px;font-weight:600;color:var(--secondary);text-transform:uppercase;letter-spacing:.4px;margin:22px 4px 8px}
+  .chip{font-size:12px;font-weight:600;padding:3px 9px;border-radius:20px}
+  .chip.green{background:#E8F9EE;color:#248A3D}
+  .chip.gray{background:#EEEFF1;color:var(--secondary)}
+  .chip.blue{background:var(--blue-soft);color:var(--blue)}
+  .homebar{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:130px;height:5px;border-radius:3px;background:#000;opacity:.25;z-index:60}
+
+  /* ---------- Home / Timer ---------- */
+  .hero{padding:6px 24px 20px;text-align:center}
+  .hero .state{font-size:13px;font-weight:600;color:var(--green);text-transform:uppercase;letter-spacing:1px;display:flex;align-items:center;justify-content:center;gap:6px}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 1.6s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+  .clock{font-size:64px;font-weight:200;letter-spacing:-1px;margin:10px 0 4px;font-variant-numeric:tabular-nums}
+  .hero .what{font-size:17px;font-weight:600}
+  .hero .where{font-size:14px;color:var(--secondary);margin-top:2px}
+  .stopbtn{margin:18px auto 0;width:76px;height:76px;border-radius:50%;background:#FFE9E7;color:var(--red);
+    display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700}
+  .stopbtn .sq{width:26px;height:26px;border-radius:6px;background:var(--red)}
+  .fab{position:absolute;right:18px;bottom:18px;width:56px;height:56px;border-radius:50%;background:var(--blue);color:#fff;
+    display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:300;box-shadow:0 8px 20px rgba(10,132,255,.4);z-index:10}
+
+  .recent-card{background:var(--card);border-radius:16px;padding:14px;flex:1;min-width:0;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+  .recent-card .rc-tile{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:14px;margin-bottom:10px}
+  .recent-card .rc-name{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .recent-card .rc-sub{font-size:12px;color:var(--secondary);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .recent-card .rc-go{margin-top:10px;font-size:13px;font-weight:700;color:var(--blue);display:flex;align-items:center;gap:5px}
+  .play{width:0;height:0;border-left:8px solid var(--blue);border-top:5px solid transparent;border-bottom:5px solid transparent}
+
+  /* timeline */
+  .tl-row{display:flex;gap:12px;padding:10px 0;border-bottom:.5px solid var(--sep)}
+  .tl-time{width:46px;font-size:12px;color:var(--secondary);padding-top:3px;font-variant-numeric:tabular-nums;flex:0 0 auto}
+  .tl-bar{flex:1;border-radius:10px;padding:9px 12px;font-size:13px;font-weight:600;color:#fff}
+  .tl-bar .d2{font-weight:400;opacity:.85;font-size:12px;margin-top:1px}
+
+  /* ---------- Sheets ---------- */
+  .sheet-dim{position:absolute;inset:0;background:rgba(0,0,0,.35);z-index:20}
+  .sheet{position:absolute;left:0;right:0;bottom:0;background:#F7F7FA;border-radius:28px 28px 0 0;z-index:30;padding:8px 16px 30px;box-shadow:0 -10px 40px rgba(0,0,0,.2)}
+  .grab{width:38px;height:5px;border-radius:3px;background:var(--tertiary);margin:4px auto 12px}
+  .sheet .sh-title{font-size:19px;font-weight:700;text-align:center;margin-bottom:14px}
+  .search{background:#E9E9EB;border-radius:12px;padding:9px 12px;color:var(--secondary);font-size:15px;display:flex;gap:7px;align-items:center;margin-bottom:12px}
+  .proj-opt{display:flex;align-items:center;gap:12px;padding:11px 4px;border-bottom:.5px solid var(--sep)}
+  .proj-opt .grow{flex:1}
+  .proj-opt .n{font-size:16px;font-weight:500}
+  .proj-opt .c{font-size:13px;color:var(--secondary)}
+  .startbar{margin-top:14px;background:var(--blue);color:#fff;text-align:center;font-size:17px;font-weight:600;padding:15px;border-radius:16px;display:flex;align-items:center;justify-content:center;gap:8px}
+  .seg{display:flex;background:#E9E9EB;border-radius:10px;padding:2px;margin:4px 0 14px}
+  .seg div{flex:1;text-align:center;font-size:13px;font-weight:600;padding:7px 0;color:var(--label);border-radius:8px}
+  .seg div.on{background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+
+  /* ---------- History ---------- */
+  .cal{background:var(--card);border-radius:var(--radius);padding:14px;margin-bottom:16px}
+  .cal-head{display:flex;justify-content:space-between;align-items:center;font-size:15px;font-weight:700;margin-bottom:10px}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;text-align:center;font-size:13px}
+  .cal-grid .dow{font-size:11px;color:var(--secondary);font-weight:600}
+  .cal-day{height:34px;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:50%;font-weight:500;position:relative}
+  .cal-day.sel{background:var(--blue);color:#fff}
+  .cal-day.today{color:var(--blue);font-weight:700}
+  .cal-day .mini{position:absolute;bottom:2px;width:4px;height:4px;border-radius:50%;background:var(--blue)}
+  .cal-day.sel .mini{background:#fff}
+
+  /* ---------- Reports ---------- */
+  .week-bars{display:flex;align-items:flex-end;gap:10px;height:120px;padding:0 4px}
+  .wb{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end}
+  .wb .bar{width:100%;border-radius:8px 8px 4px 4px;background:var(--blue);opacity:.25}
+  .wb.on .bar{background:var(--blue);opacity:1}
+  .wb .lbl{font-size:11px;color:var(--secondary);font-weight:600}
+  .wb .hrs{font-size:11px;font-weight:700}
+  .donut-wrap{display:flex;align-items:center;gap:18px}
+  .donut{width:110px;height:110px;border-radius:50%;background:conic-gradient(var(--blue) 0 55%, var(--green) 55% 80%, var(--orange) 80% 95%, #E5E5EA 95% 100%);position:relative;flex:0 0 auto}
+  .donut::after{content:"7.9h";position:absolute;inset:16px;background:var(--card);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px}
+  .legend{flex:1;font-size:13px}
+  .legend .li{display:flex;align-items:center;gap:8px;margin:7px 0;color:var(--secondary)}
+  .legend .sw{width:10px;height:10px;border-radius:3px}
+  .legend b{color:var(--label);margin-left:auto}
+
+  /* ---------- Idle review ---------- */
+  .idle-banner{background:linear-gradient(135deg,#FF9F0A,#FF6B22);color:#fff;padding:14px;border-radius:16px;display:flex;gap:12px;align-items:center;margin-bottom:16px}
+  .idle-actions{display:flex;gap:10px;margin-top:14px}
+  .btn{flex:1;text-align:center;padding:12px;border-radius:13px;font-size:15px;font-weight:600}
+  .btn.pri{background:#fff;color:var(--label)}
+  .btn.sec{background:rgba(255,255,255,.25);color:#fff}
+
+  /* ---------- Login ---------- */
+  .login{flex:1;background:#fff;display:flex;flex-direction:column;padding:0 28px}
+  .logo{margin:60px auto 8px;width:86px;height:86px;border-radius:24px;background:linear-gradient(135deg,#0A84FF,#0055D4);
+    display:flex;align-items:center;justify-content:center;box-shadow:0 12px 30px rgba(10,132,255,.35)}
+  .field{background:#F2F2F7;border-radius:13px;padding:14px 16px;font-size:15px;color:var(--secondary);margin-bottom:12px}
+  .btn-blue{background:var(--blue);color:#fff;text-align:center;padding:15px;border-radius:14px;font-size:16px;font-weight:600;margin-top:6px}
+  .icon-svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  .tab .icon-svg{width:24px;height:24px}
+</style>
+</head>
+<body>
+
+<h1>TimeTracker — Redesign Concept</h1>
+<p class="sub">A ground-up rethink of the mobile app. One job done well: <b>start, stop, and account for your time in seconds.</b> Five tabs, large targets, zero clutter — every screen below. The bloated CRM / kanban / deals surface moves out of the primary app; core tracking, timesheets and reports are front and center.</p>
+
+<!-- ======================= SECTION: CORE LOOP ======================= -->
+<div class="section"><h2>1 · The core loop — start &amp; stop in one tap</h2>
+<div class="grid">
+
+  <!-- HOME -->
+  <div class="phone">
+    <div class="frame"><div class="notch"></div><div class="homebar"></div>
+      <div class="statusbar"><span>9:41</span><span class="right">▸▸ ▮</span></div>
+      <div class="content">
+        <div class="navbar"><span class="big">Today</span><span class="navlink">Mon, Aug 31</span></div>
+        <div class="scroll">
+          <!-- Live timer hero -->
+          <div class="hero" style="background:var(--card);border-radius:24px;margin-bottom:16px;padding-bottom:24px">
+            <div class="state"><span class="dot"></span> Tracking</div>
+            <div class="clock">1:24:07</div>
+            <div class="what">API refactor — pagination</div>
+            <div class="where">TimeTracker · Backend</div>
+            <div class="stopbtn"><div class="sq"></div></div>
+            <div style="font-size:12px;color:var(--secondary);margin-top:8px">Started 8:17 · Billable</div>
+          </div>
+
+          <!-- Recent quick start -->
+          <div class="sec-title" style="margin-top:4px">Continue working on</div>
+          <div style="display:flex;gap:10px">
+            <div class="recent-card">
+              <div class="rc-tile" style="background:#5E5CE6">M</div>
+              <div class="rc-name">Mobile release</div>
+              <div class="rc-sub">Client App · 2h ago</div>
+              <div class="rc-go"><span class="play"></span> Start</div>
+            </div>
+            <div class="recent-card">
+              <div class="rc-tile" style="background:#FF9F0A">S</div>
+              <div class="rc-name">Sprint planning</div>
+              <div class="rc-sub">Internal · Yesterday</div>
+              <div class="rc-go"><span class="play"></span> Start</div>
+            </div>
+            <div class="recent-card">
+              <div class="rc-tile" style="background:#30D158">R</div>
+              <div class="rc-name">Reviews</div>
+              <div class="rc-sub">Client App · Mon</div>
+              <div class="rc-go"><span class="play"></span> Start</div>
+            </div>
+          </div>
+
+          <!-- Day timeline -->
+          <div class="sec-title">Today · 5h 12m</div>
+          <div class="list" style="padding:6px 16px">
+            <div class="tl-row"><div class="tl-time">8:17</div>
+              <div class="tl-bar" style="background:var(--blue)">API refactor<div class="d2">Running · 1h 24m</div></div></div>
+            <div class="tl-row" style="border:none"><div class="tl-time">—</div>
+              <div class="tl-bar" style="background:#D1D1D6;color:var(--label)">Break<div class="d2">12:04 – 12:31</div></div></div>
+          </div>
+        </div>
+        <div class="fab">+</div>
+        <div class="tabbar">
+          <div class="tab active"><svg class="icon-svg" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/></svg>Timer</div>
+          <div class="tab"><svg class="icon-svg" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>History</div>
+          <div class="tab"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-8M21 20H3"/></svg>Reports</div>
+          <div class="tab"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M4 6h16M4 6v13a2 2 0 002 2h12a2 2 0 002-2V6M4 6l2-3h12l2 3M9 10v7M15 10v7"/></svg>Projects</div>
+          <div class="tab"><svg class="icon-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 00-.1-1.2l2-1.6-2-3.4-2.4 1a7 7 0 00-2-1.2L14 3h-4l-.5 2.6a7 7 0 00-2 1.2l-2.4-1-2 3.4 2 1.6A7 7 0 005 12"/></svg>Settings</div>
+        </div>
+      </div>
+    </div>
+    <div class="caption"><div class="t">Timer (Home)</div><div class="d">The only screen that matters. Giant live clock, one-tap stop. "Continue working on" restarts a recent combo with a single tap. Today's timeline underneath.</div></div>
+  </div>
+
+  <!-- START SHEET -->
+  <div class="phone">
+    <div class="frame"><div class="notch"></div><div class="homebar"></div>
+      <div class="statusbar"><span>9:41</span><span class="right">▸▸ ▮</span></div>
+      <div class="content">
+        <div class="navbar"><span class="big">Timer</span><span></span></div>
+        <div class="scroll" style="opacity:.45">
+          <div class="hero" style="background:var(--card);border-radius:24px;margin-bottom:16px">
+            <div class="state" style="color:var(--secondary)"><span class="dot" style="background:var(--secondary)"></span> Stopped</div>
+            <div class="clock">0:00:00</div>
+            <div class="what" style="color:var(--secondary)">Nothing running</div>
+          </div>
+        </div>
+        <div class="sheet-dim"></div>
+        <div class="sheet">
+          <div class="grab"></div>
+          <div class="sh-title">What are you working on?</div>
+          <div class="search">⌕ Search projects &amp; tasks</div>
+          <div class="seg"><div class="on">Recent</div><div>Favorites</div><div>All</div></div>
+          <div style="background:#fff;border-radius:16px;padding:0 14px">
+            <div class="proj-opt"><div class="icon-tile" style="background:#5E5CE6">M</div>
+              <div class="grow"><div class="n">Mobile release</div><div class="c">Client App · started 2h ago</div></div><span class="chev">›</span></div>
+            <div class="proj-opt"><div class="icon-tile" style="background:#0A84FF">A</div>
+              <div class="grow"><div class="n">API refactor</div><div class="c">Backend · started now</div></div><span class="chev">›</span></div>
+            <div class="proj-opt"><div class="icon-tile" style="background:#FF9F0A">S</div>
+              <div class="grow"><div class="n">Sprint planning</div><div class="c">Internal · yesterday</div></div><span class="chev">›</span></div>
+            <div class="proj-opt" style="border:none"><div class="icon-tile" style="background:#30D158">R</div>
+              <div class="grow"><div class="n">Reviews</div><div class="c">Client App · Monday</div></div><span class="chev">›</span></div>
+          </div>
+          <div class="startbar">▶ Start tracking</div>
+        </div>
+      </div>
+    </div>
+    <div class="caption"><div class="t">Start sheet</div><div class="d">Tap + → bottom sheet. Recents first, favorites and full search a swipe away. Project → task selection happens inline before "Start tracking".</div></div>
+  </div>
+
+  <!-- ACTIVE ENTRY DETAIL -->
+  <div class="phone">
+    <div class="frame"><div class="notch"></div><div class="homebar"></div>
+      <div class="statusbar"><span>9:41</span><span class="right">▸▸ ▮</span></div>
+      <div class="content">
+        <div class="navbar"><span class="navlink">‹ Timer</span><span class="small" style="font-weight:700">Edit</span><span class="navlink">Done</span></div>
+        <div class="scroll">
+          <div class="sec-title" style="margin-top:2px">Task</div>
+          <div class="list">
+            <div class="row"><div class="icon-tile" style="background:#0A84FF">A</div>
+              <div class="grow"><div class="title">API refactor — pagination</div><div class="sub2">Backend · Client: Acme GmbH</div></div><span class="chev">›</span></div>
+          </div>
+          <div class="sec-title">Details</div>
+          <div class="list">
+            <div class="row"><div class="grow">Started</div><div class="val">8:17 AM</div></div>
+            <div class="row"><div class="grow">Breaks</div><div class="val">12 min</div></div>
+            <div class="row"><div class="grow">Tags</div><div class="val">#backend #sprint-14</div></div>
+            <div class="row"><div class="grow">Billable</div>
+              <div style="width:51px;height:31px;border-radius:16px;background:var(--green);position:relative">
+                <div style="position:absolute;right:2px;top:2px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2)"></div></div></div>
+          </div>
+          <div class="sec-title">Notes</div>
+          <div class="list"><div class="row" style="color:var(--secondary)">Add a note…</div></div>
+          <div style="text-align:center;color:var(--red);font-size:16px;font-weight:500;padding:22px 0">Stop &amp; discard</div>
+        </div>
+      </div>
+    </div>
+    <div class="caption"><div class="t">Running entry detail</div><div class="d">Tap the running timer to adjust it live: change task, add tags/notes, toggle billable. Everything editable while the clock runs.</div></div>
+  </div>
+
+  <!-- IDLE REVIEW -->
+  <div class="phone">
+    <div class="frame"><div class="notch"></div><div class="homebar"></div>
+      <div class="statusbar"><span>9:41</span><span class="right">▸▸ ▮</span></div>
+      <div class="content">
+        <div class="navbar"><span class="big">Timer</span><span></span></div>
+        <div class="scroll">
+          <div class="idle-banner">
+            <svg class="icon-svg" viewBox="0 0 24 24" style="width:28px;height:28px;flex:0 0 auto"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+            <div style="flex:1"><div style="font-weight:700;font-size:15px">Was this time real work?</div>
+              <div style="font-size:13px;opacity:.9;margin-top:2px">The timer ran 42 min while your device was idle (14:02 – 14:44).</div></div>
+          </div>
+          <div style="background:var(--card);border-radius:20px;padding:18px;text-align:center;margin-bottom:16px">
+            <div style="font-size:13px;color:var(--secondary);font-weight:600">UNANSWERED PERIOD</div>
+            <div style="font-size:34px;font-weight:200;margin:6px 0">0:42:00</div>
+            <div style="font-size:14px;color:var(--secondary)">API refactor · Backend</div>
+            <div class="idle-actions">
+              <div class="btn pri" style="color:#248A3D;font-weight:700">Keep time</div>
+              <div class="btn pri" style="color:var(--orange);font-weight:700">Trim to 5 min</div>
+              <div class="btn pri" style="color:var(--red);font-weight:700">Discard</div>
+            </div>
+          </div>
+          <div class="sec-title">Previously reviewed</div>
+          <div class="list">
+            <div class="row"><div class="grow"><div class="title">Fri, Aug 28 · 0:36</div><div class="sub2">Trimmed to 5 min · Mobile release</div></div><span class="chip gray">Trimmed</span></div>
+            <div class="row"><div class="grow"><div class="title">Wed, Aug 26 · 0:52</div><div class="sub2">Kept in full · API refactor</div></div><span class="chip green">Kept</span></div>
+          </div>
+        </div>
+        <div class="tabbar">
+          <div class="tab active"><svg class="icon-svg" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/></svg>Timer</div>
+          <div class="tab"><svg class="icon-svg" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>History</div>
+          <div class="tab"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-8M21 20H3"/></svg>Reports</div>
+          <div class="tab"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M4 6h16M4 6v13a2 2 0 002 2h12a2 2 0 002-2V6M4 6l2-3h12l2 3M9 10v7M15 10v7"/></svg>Projects</div>
+          <div class="tab"><svg class="icon-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 00-.1-1.2l2-1.6-2-3.4-2.4 1a7 7 0 00-2-1.2L14 3h-4l-.5 2.6a7 7 0 00-2 1.2l-2.4-1-2 3.4 2 1.6A7 7 0 005 12"/></svg>Settings</div>
+        </div>
+      </div>
+    </div>
+    <div class="caption"><div class="t">Idle review</div><div class="d">Forgotten timers become a friendly decision card: keep, trim, or discard — one tap each. Reviewed history is transparent below.</div></div>
+  </div>
+</div></div>
+
+<!-- ======================= SECTION: HISTORY & REPORTS ======================= -->
+<div class="section"><h2>2 · Looking back — history &amp; reports</h2>
+<div class="grid">
+
+  <!-- HISTORY -->
+  <div class="phone">
+    <div class="frame"><div class="notch"></div><div class="homebar"></div>
+      <div class="statusbar"><span>9:41</span><span class="right">▸▸ ▮</span></div>
+      <div class="content">
+        <div class="navbar"><span class="big">History</span><span class="navlink">Filter</span></div>
+        <div class="scroll">
+          <div class="cal">
+            <div class="cal-head"><span style="color:var(--blue)">‹</span><span>August 2026</span><span style="color:var(--blue)">›</span></div>
+            <div class="cal-grid">
+              <div class="dow">M</div><div class="dow">T</div><div class="dow">W</div><div class="dow">T</div><div class="dow">F</div><div class="dow">S</div><div class="dow">S</div>
+              <div class="cal-day" style="color:var(--tertiary)">27</div><div class="cal-day" style="color:var(--tertiary)">28</div><div class="cal-day" style="color:var(--tertiary)">29</div><div class="cal-day" style="color:var(--tertiary)">30</div>
+              <div class="cal-day">31<span class="mini"></span></div>
+              <div class="cal-day" style="color:var(--tertiary)">1</div><div class="cal-day" style="color:var(--tertiary)">2</div>
+              <div class="cal-day">3<span class="mini"></span></div><div class="cal-day">4<span class="mini"></span></div><div class="cal-day">5<span class="mini"></span></div><div class="cal-day">6<span class="mini"></span></div><div class="cal-day">7<span class="mini"></span></div><div class="cal-day">8</div><div class="cal-day">9</div>
+              <div class="cal-day">10<span class="mini"></span></div><div class="cal-day">11<span class="mini"></span></div><div class="cal-day">12<span class="mini"></span></div><div class="cal-day">13<span class="mini"></span></div><div class="cal-day">14<span class="mini"></span></div><div class="cal-day">15</div><div class="cal-day">16</div>
+              <div class="cal-day">17<span class="mini"></span></div><div class="cal-day">18<span class="mini"></span></div><div class="cal-day">19<span class="mini"></span></div><div class="cal-day">20<span class="mini"></span></div><div class="cal-day">21<span class="mini"></span></div><div class="cal-day">22</div><div class="cal-day">23</div>
+              <div class="cal-day">24<span class="mini"></span></div><div class="cal-day">25<span class="mini"></span></div><div class="cal-day">26<span class="mini"></span></div><div class="cal-day">27<span class="mini"></span></div><div class="cal-day">28<span class="mini"></span></div><div class="cal-day">29</div><div class="cal-day">30</div>
+              <div class="cal-day sel">31</div>
+            </div>
+          </div>
+          <div class="sec-title" style="margin-top:0">Today · 5h 12m · 4 entries</div>
+          <div class="list">
+            <div class="row"><div class="icon-tile" style="background:#0A84FF">A</div>
+              <div class="grow"><div class="title">API refactor</div><div class="sub2">8:17 – 9:41 · #backend</div></div>
+              <div style="text-align:right"><div style="font-weight:600">1:24</div><span class="chip blue">Running</span></div></div>
+            <div class="row"><div class="icon-tile" style="background:#5E5CE6">M</div>
+              <div class="grow"><div class="title">Mobile release</div><div class="sub2">10:52 – 12:04 · #client-app</div></div>
+              <div style="text-align:right"><div style="font-weight:600">1:12</div><span class="chip green">Billable</span></div></div>
+            <div class="row"><div class="icon-tile" style="background:#30D158">R</div>
+              <div class="grow"><div class="title">Reviews</div><div class="sub2">13:15 – 14:44 · Client App</div></div>
+              <div style="text-align:right"><div style="font-weight:600">1:29</div><span class="chip green">Billable</span></div></div>
+            <div class="row"><div class="icon-tile" style="background:#FF9F0A">S</div>
+              <div class="grow"><div class="title">Sprint planning</div><div class="sub2">15:00 – 16:07 · Internal</div></div>
+              <div style="text-align:right"><div style="font-weight:600">1:07</div><span class="chip gray">Internal</span></div></div>
+          </div>
+        </div>
+        <div class="fab">+</div>
+        <div class="tabbar">
+          <div class="tab"><svg class="icon-svg" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/></svg>Timer</div>
+          <div class="tab active"><svg class="icon-svg" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>History</div>
+          <div class="tab"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-8M21 20H3"/></svg>Reports</div>
+          <div class="tab"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M4 6h16M4 6v13a2 2 0 002 2h12a2 2 0 002-2V6M4 6l2-3h12l2 3M9 10v7M15 10v7"/></svg>Projects</div>
+          <div class="tab"><svg class="icon-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 00-.1-1.2l2-1.6-2-3.4-2.4 1a7 7 0 00-2-1.2L14 3h-4l-.5 2.6a7 7 0 00-2 1.2l-2.4-1-2 3.4 2 1.6A7 7 0 005 12"/></svg>Settings</div>
+        </div>
+      </div>
+    </div>
+    <div class="caption"><div class="t">History</div><div class="d">Calendar with tracked-day dots → tap a day → grouped entries. Swipe left to delete, tap to edit. Swipe an entry right to restart it in the timer.</div></div>
+  </div>
+
+  <!-- EDIT ENTRY -->
+  <div class="phone">
+    <div class="frame"><div class="notch"></div><div class="homebar"></div>
+      <div class="statusbar"><span>9:41</span><span class="right">▸▸ ▮</span></div>
+      <div class="content">
+        <div class="navbar"><span class="navlink">‹ History</span><span class="small" style="font-weight:700">Edit Entry</span><span class="navlink">Save</span></div>
+        <div class="scroll">
+          <div style="background:var(--card);border-radius:20px;padding:18px;text-align:center;margin-bottom:18px">
+            <div style="font-size:44px;font-weight:200">1:29:07</div>
+            <div style="font-size:13px;color:var(--secondary)">13:15 – 14:44 · Tue, Aug 31</div>
+          </div>
+          <div class="sec-title" style="margin-top:0">Task</div>
+          <div class="list">
+            <div class="row"><div class="icon-tile" style="background:#30D158">R</div>
+              <div class="grow"><div class="title">Reviews</div><div class="sub2">Client App · Acme GmbH</div></div><span class="chev">›</span></div>
+          </div>
+          <div class="sec-title">Time</div>
+          <div class="list">
+            <div class="row"><div class="grow">Start</div><div class="val" style="color:var(--blue);font-weight:600">13:15</div></div>
+            <div class="row"><div class="grow">End</div><div class="val" style="color:var(--blue);font-weight:600">14:44</div></div>
+          </div>
+          <div class="sec-title">Details</div>
+          <div class="list">
+            <div class="row"><div class="grow">Billable</div>
+              <div style="width:51px;height:31px;border-radius:16px;background:var(--green);position:relative"><div style="position:absolute;right:2px;top:2px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2)"></div></div></div>
+            <div class="row"><div class="grow">Tags</div><div class="val">#review #acme</div></div>
+            <div class="row"><div class="grow">Notes</div><div class="val">PR #412, #415</div></div>
+          </div>
+          <div style="text-align:center;color:var(--red);font-size:16px;font-weight:500;padding:22px 0">Delete entry</div>
+        </div>
+      </div>
+    </div>
+    <div class="caption"><div class="t">Edit entry</div><div class="d">Duration is derived, not typed: change start or end and the total updates live. Fewer fields, clear hierarchy.</div></div>
+  </div>
+
+  <!-- REPORTS -->
+  <div class="phone">
+    <div class="frame"><div class="notch"></div><div class="homebar"></div>
+      <div class="statusbar"><span>9:41</span><span class="right">▸▸ ▮</span></div>
+      <div class="content">
+        <div class="navbar"><span class="big">Reports</span><span class="navlink">Export</span></div>
+        <div class="scroll">
+          <div class="seg"><div class="on">Week</div><div>Month</div><div>Year</div></div>
+          <div class="card" style="padding:16px;margin-bottom:14px">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px">
+              <div><div style="font-size:13px;color:var(--secondary);font-weight:600">THIS WEEK</div>
+                <div style="font-size:28px;font-weight:800;letter-spacing:-.5px">31h 24m</div></div>
+              <span class="chip green">+4h vs last</span>
+            </div>
+            <div class="week-bars">
+              <div class="wb"><div class="hrs">6h</div><div class="bar" style="height:62%"></div><div class="lbl">M</div></div>
+              <div class="wb"><div class="hrs">7h</div><div class="bar" style="height:74%"></div><div class="lbl">T</div></div>
+              <div class="wb"><div class="hrs">8h</div><div class="bar" style="height:84%"></div><div class="lbl">W</div></div>
+              <div class="wb"><div class="hrs">6h</div><div class="bar" style="height:60%"></div><div class="lbl">T</div></div>
+              <div class="wb on"><div class="hrs" style="color:var(--blue)">5h</div><div class="bar" style="height:52%"></div><div class="lbl">F</div></div>
+              <div class="wb"><div class="hrs">0h</div><div class="bar" style="height:3%"></div><div class="lbl">S</div></div>
+              <div class="wb"><div class="hrs">0h</div><div class="bar" style="height:3%"></div><div class="lbl">S</div></div>
+            </div>
+          </div>
+          <div class="card" style="padding:16px;margin-bottom:14px">
+            <div style="font-size:15px;font-weight:700;margin-bottom:12px">By project</div>
+            <div class="donut-wrap">
+              <div class="donut"></div>
+              <div class="legend">
+                <div class="li"><span class="sw" style="background:var(--blue)"></span>Backend <b>55%</b></div>
+                <div class="li"><span class="sw" style="background:var(--green)"></span>Client App <b>25%</b></div>
+                <div class="li"><span class="sw" style="background:var(--orange)"></span>Internal <b>15%</b></div>
+                <div class="li"><span class="sw" style="background:#E5E5EA"></span>Unbilled <b>5%</b></div>
+              </div>
+            </div>
+          </div>
+          <div class="card" style="padding:16px">
+            <div style="display:flex;justify-content:space-between;margin-bottom:10px">
+              <div style="font-size:15px;font-weight:700">Billable this week</div><div style="font-weight:700;color:var(--green)">84%</div></div>
+            <div style="height:10px;border-radius:5px;background:#E5E5EA;overflow:hidden">
+              <div style="width:84%;height:100%;background:var(--green)"></div></div>
+            <div style="font-size:13px;color:var(--secondary);margin-top:8px">€2,940 billable · €560 non-billable</div>
+          </div>
+        </div>
+        <div class="tabbar">
+          <div class="tab"><svg class="icon-svg" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/></svg>Timer</div>
+          <div class="tab"><svg class="icon-svg" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>History</div>
+          <div class="tab active"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-8M21 20H3"/></svg>Reports</div>
+          <div class="tab"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M4 6h16M4 6v13a2 2 0 002 2h12a2 2 0 002-2V6M4 6l2-3h12l2 3M9 10v7M15 10v7"/></svg>Projects</div>
+          <div class="tab"><svg class="icon-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 00-.1-1.2l2-1.6-2-3.4-2.4 1a7 7 0 00-2-1.2L14 3h-4l-.5 2.6a7 7 0 00-2 1.2l-2.4-1-2 3.4 2 1.6A7 7 0 005 12"/></svg>Settings</div>
+        </div>
+      </div>
+    </div>
+    <div class="caption"><div class="t">Reports</div><div class="d">Week / month / year with one segmented control. Hours at a glance, project split, billable ratio, export to CSV/PDF in the nav bar.</div></div>
+  </div>
+</div></div>
+
+<!-- ======================= SECTION: ORGANIZATION & SETUP ======================= -->
+<div class="section"><h2>3 · Organizing &amp; setup</h2>
+<div class="grid">
+
+  <!-- PROJECTS -->
+  <div class="phone">
+    <div class="frame"><div class="notch"></div><div class="homebar"></div>
+      <div class="statusbar"><span>9:41</span><span class="right">▸▸ ▮</span></div>
+      <div class="content">
+        <div class="navbar"><span class="big">Projects</span><span class="navlink">＋</span></div>
+        <div class="scroll">
+          <div class="search" style="margin-bottom:14px">⌕ Search</div>
+          <div class="list" style="margin-bottom:20px">
+            <div class="row"><div class="icon-tile" style="background:#0A84FF">B</div>
+              <div class="grow"><div class="title">Backend</div><div class="sub2">Acme GmbH · 3 tasks</div></div>
+              <div style="text-align:right"><div style="font-weight:600;font-size:15px">14:20</div><div class="sub2">this week</div></div></div>
+            <div class="row"><div class="icon-tile" style="background:#5E5CE6">C</div>
+              <div class="grow"><div class="title">Client App</div><div class="sub2">Acme GmbH · 5 tasks</div></div>
+              <div style="text-align:right"><div style="font-weight:600;font-size:15px">9:45</div><div class="sub2">this week</div></div></div>
+            <div class="row"><div class="icon-tile" style="background:#FF9F0A">I</div>
+              <div class="grow"><div class="title">Internal</div><div class="sub2">No client · 2 tasks</div></div>
+              <div style="text-align:right"><div style="font-weight:600;font-size:15px">7:19</div><div class="sub2">this week</div></div></div>
+            <div class="row"><div class="icon-tile" style="background:#30D158">W</div>
+              <div class="grow"><div class="title">Website relaunch</div><div class="sub2">Beacon AG · archived</div></div><span class="chip gray">Archived</span></div>
+          </div>
+          <div class="sec-title">Clients</div>
+          <div class="list">
+            <div class="row"><div class="icon-tile" style="background:#8E8E93">A</div><div class="grow"><div class="title">Acme GmbH</div><div class="sub2">2 projects</div></div><span class="chev">›</span></div>
+            <div class="row"><div class="icon-tile" style="background:#8E8E93">B</div><div class="grow"><div class="title">Beacon AG</div><div class="sub2">1 project</div></div><span class="chev">›</span></div>
+          </div>
+        </div>
+        <div class="tabbar">
+          <div class="tab"><svg class="icon-svg" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/></svg>Timer</div>
+          <div class="tab"><svg class="icon-svg" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>History</div>
+          <div class="tab"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-8M21 20H3"/></svg>Reports</div>
+          <div class="tab active"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M4 6h16M4 6v13a2 2 0 002 2h12a2 2 0 002-2V6M4 6l2-3h12l2 3M9 10v7M15 10v7"/></svg>Projects</div>
+          <div class="tab"><svg class="icon-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 00-.1-1.2l2-1.6-2-3.4-2.4 1a7 7 0 00-2-1.2L14 3h-4l-.5 2.6a7 7 0 00-2 1.2l-2.4-1-2 3.4 2 1.6A7 7 0 005 12"/></svg>Settings</div>
+        </div>
+      </div>
+    </div>
+    <div class="caption"><div class="t">Projects</div><div class="d">Projects grouped with weekly totals; clients below as a secondary group. Favorites pin to the top of the start sheet.</div></div>
+  </div>
+
+  <!-- PROJECT DETAIL -->
+  <div class="phone">
+    <div class="frame"><div class="notch"></div><div class="homebar"></div>
+      <div class="statusbar"><span>9:41</span><span class="right">▸▸ ▮</span></div>
+      <div class="content">
+        <div class="navbar"><span class="navlink">‹ Projects</span><span></span><span class="navlink">⋯</span></div>
+        <div class="scroll">
+          <div style="background:linear-gradient(135deg,#0A84FF,#0055D4);border-radius:20px;padding:18px;color:#fff;margin-bottom:16px">
+            <div style="font-size:22px;font-weight:800">Backend</div>
+            <div style="font-size:14px;opacity:.85">Acme GmbH · Billable · €95/h</div>
+            <div style="display:flex;gap:24px;margin-top:14px">
+              <div><div style="font-size:20px;font-weight:700">14:20</div><div style="font-size:12px;opacity:.8">this week</div></div>
+              <div><div style="font-size:20px;font-weight:700">62:05</div><div style="font-size:12px;opacity:.8">this month</div></div>
+              <div><div style="font-size:20px;font-weight:700">€5,895</div><div style="font-size:12px;opacity:.8">revenue</div></div>
+            </div>
+            <div style="margin-top:16px;background:#fff;color:var(--blue);text-align:center;font-weight:700;font-size:15px;padding:12px;border-radius:13px">▶ Start tracking</div>
+          </div>
+          <div class="sec-title" style="margin-top:0">Tasks</div>
+          <div class="list">
+            <div class="row"><div class="grow"><div class="title">API refactor — pagination</div><div class="sub2">8:17 today · running</div></div><span class="play" style="border-left-color:var(--blue)"></span></div>
+            <div class="row"><div class="grow"><div class="title">Rate limiting</div><div class="sub2">2h 40m total</div></div><span class="play" style="border-left-color:var(--blue)"></span></div>
+            <div class="row"><div class="grow"><div class="title">Auth tokens</div><div class="sub2">Done · 6h 12m</div></div><span class="chip green">✓</span></div>
+            <div class="row" style="color:var(--blue);font-weight:500"><div class="grow">Add task</div></div>
+          </div>
+          <div class="sec-title">Recent entries</div>
+          <div class="list">
+            <div class="row"><div class="grow"><div class="title">API refactor</div><div class="sub2">Today · 8:17</div></div><div style="font-weight:600">1:24</div></div>
+            <div class="row"><div class="grow"><div class="title">Rate limiting</div><div class="sub2">Yesterday · 9:02</div></div><div style="font-weight:600">2:40</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="caption"><div class="t">Project detail</div><div class="d">Key numbers up top, tasks with one-tap start next to each, recent entries below. Everything about one project on one screen.</div></div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div class="phone">
+    <div class="frame"><div class="notch"></div><div class="homebar"></div>
+      <div class="statusbar"><span>9:41</span><span class="right">▸▸ ▮</span></div>
+      <div class="content">
+        <div class="navbar"><span class="big">Settings</span><span></span></div>
+        <div class="scroll">
+          <div class="list" style="margin-bottom:20px">
+            <div class="row"><div class="icon-tile" style="background:var(--blue)">G</div>
+              <div class="grow"><div class="title">Giorgio</div><div class="sub2">giorgio@acme.dev</div></div><span class="chev">›</span></div>
+            <div class="row"><div class="grow">Server</div><div class="val">acme.tracker.app</div><span class="chip green">Connected</span></div>
+          </div>
+          <div class="sec-title">Tracking</div>
+          <div class="list">
+            <div class="row"><div class="grow">Idle detection</div>
+              <div style="width:51px;height:31px;border-radius:16px;background:var(--green);position:relative"><div style="position:absolute;right:2px;top:2px;width:27px;height:27px;border-radius:50%;background:#fff"></div></div></div>
+            <div class="row"><div class="grow">Idle timeout</div><div class="val">30 min</div><span class="chev">›</span></div>
+            <div class="row"><div class="grow">Ask about idle time</div><div class="val">Always</div><span class="chev">›</span></div>
+            <div class="row"><div class="grow">Default entries to billable</div>
+              <div style="width:51px;height:31px;border-radius:16px;background:#E9E9EB;position:relative"><div style="position:absolute;left:2px;top:2px;width:27px;height:27px;border-radius:50%;background:#fff"></div></div></div>
+          </div>
+          <div class="sec-title">Appearance</div>
+          <div class="list">
+            <div class="row"><div class="grow">Theme</div><div class="val">System</div><span class="chev">›</span></div>
+            <div class="row"><div class="grow">Start tab</div><div class="val">Timer</div><span class="chev">›</span></div>
+          </div>
+          <div class="sec-title">Data</div>
+          <div class="list">
+            <div class="row"><div class="grow">Offline sync</div><div class="val">Up to date</div></div>
+            <div class="row"><div class="grow">Export all data</div><span class="chev">›</span></div>
+          </div>
+        </div>
+        <div class="tabbar">
+          <div class="tab"><svg class="icon-svg" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/></svg>Timer</div>
+          <div class="tab"><svg class="icon-svg" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>History</div>
+          <div class="tab"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-8M21 20H3"/></svg>Reports</div>
+          <div class="tab"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M4 6h16M4 6v13a2 2 0 002 2h12a2 2 0 002-2V6M4 6l2-3h12l2 3M9 10v7M15 10v7"/></svg>Projects</div>
+          <div class="tab active"><svg class="icon-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 00-.1-1.2l2-1.6-2-3.4-2.4 1a7 7 0 00-2-1.2L14 3h-4l-.5 2.6a7 7 0 00-2 1.2l-2.4-1-2 3.4 2 1.6A7 7 0 005 12"/></svg>Settings</div>
+        </div>
+      </div>
+    </div>
+    <div class="caption"><div class="t">Settings</div><div class="d">Everything else lives here — server connection, idle behavior, appearance, data. No business-suite tabs cluttering the daily flow.</div></div>
+  </div>
+
+  <!-- LOGIN -->
+  <div class="phone">
+    <div class="frame" style="background:#fff"><div class="notch"></div><div class="homebar"></div>
+      <div class="statusbar" style="background:#fff"><span>9:41</span><span class="right">▸▸ ▮</span></div>
+      <div class="content">
+        <div class="login">
+          <div class="logo">
+            <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/></svg>
+          </div>
+          <div style="text-align:center;font-size:24px;font-weight:800;letter-spacing:-.4px;margin-bottom:4px">TimeTracker</div>
+          <div style="text-align:center;color:var(--secondary);font-size:14px;margin-bottom:34px">Connect to your server to begin</div>
+          <div class="field">Server address · https://…</div>
+          <div class="field">Username or email</div>
+          <div class="field">Password</div>
+          <div class="btn-blue">Sign in</div>
+          <div style="text-align:center;color:var(--blue);font-size:15px;margin-top:18px">Help me connect</div>
+          <div style="margin-top:auto;text-align:center;color:var(--tertiary);font-size:12px;padding-bottom:24px">Works with self-hosted TimeTracker v5+</div>
+        </div>
+      </div>
+    </div>
+    <div class="caption"><div class="t">Sign in</div><div class="d">Three fields, nothing else. Server address first (this is a self-hosted app), credentials second. Self-signed certs handled quietly.</div></div>
+  </div>
+</div></div>
+
+<div class="sub" style="margin-top:40px"><b>Design principles:</b> one glanceable timer · every restart is one tap · decisions (idle, edits) presented as cards, not dialogs · iOS-native look (SF font, grouped lists, bottom sheets, segmented controls) · business suite (invoices, CRM, kanban) intentionally out of the mobile core flow.</div>
+
+</body>
+</html>

@@ -16,6 +16,7 @@ eggs/
 .eggs/
 lib/
 !mobile/lib/
+!mobile_v2/lib/
 !browser-extension/lib/
 !browser-extension/lib/**
 !browser-extension/build/
@@ -140,6 +141,8 @@ data/
 # Flutter app source lives under mobile/lib/data/ (do not treat as runtime data dir)
 !mobile/lib/data/
 !mobile/lib/data/**
+!mobile_v2/lib/data/
+!mobile_v2/lib/data/**
 logs/
 backups/
 *.db
