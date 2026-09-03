@@ -9,6 +9,7 @@ import 'package:timetracker_mobile/core/config/app_config.dart';
 import 'package:timetracker_mobile/core/constants/app_constants.dart';
 import 'package:timetracker_mobile/core/telemetry/mobile_otel.dart';
 import 'package:timetracker_mobile/data/api/api_client.dart';
+import 'package:timetracker_mobile/presentation/providers/api_provider.dart';
 import 'package:timetracker_mobile/domain/usecases/sync_usecase.dart';
 import 'package:timetracker_mobile/utils/network/connection_diagnostics.dart';
 import 'package:timetracker_mobile/utils/network/server_info.dart';
@@ -153,6 +154,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
       // Kick off background periodic sync after a successful login.
       unawaited(SyncUseCase.shared.startPeriodicSync());
+
+      // Rebuild every provider that depends on the API client (timer, time
+      // entries, recent work, ...) with the freshly persisted credentials —
+      // on a fresh install they resolved to null before this point and would
+      // stay null forever, silently disabling all authenticated data.
+      ref.invalidate(apiClientProvider);
 
       if (mounted) {
         Navigator.of(context).pushReplacementNamed(AppConstants.routeHome);
