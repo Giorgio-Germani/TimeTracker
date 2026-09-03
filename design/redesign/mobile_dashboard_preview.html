@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mobile Dashboard Redesign — Preview</title>
+<style>
+  :root {
+    --primary: #2563eb;
+    --primary-soft: #dbeafe;
+    --bg: #f4f6fb;
+    --card: #ffffff;
+    --ink: #0f172a;
+    --ink-2: #475569;
+    --ink-3: #94a3b8;
+    --line: #e2e8f0;
+    --green: #16a34a;
+    --green-soft: #dcfce7;
+    --amber: #d97706;
+    --amber-soft: #fef3c7;
+    --red: #dc2626;
+    --radius: 16px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+    background: #0b1220;
+    color: var(--ink);
+    padding: 32px 24px 48px;
+  }
+  h1 { color: #f1f5f9; font-size: 20px; font-weight: 600; margin-bottom: 4px; }
+  .sub { color: #64748b; font-size: 13px; margin-bottom: 24px; }
+  .states { display: flex; gap: 40px; flex-wrap: wrap; align-items: flex-start; }
+  .state { }
+  .state-label {
+    color: #cbd5e1; font-size: 12px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .08em; margin-bottom: 10px;
+  }
+  .state-note { color: #64748b; font-size: 12px; margin-top: 10px; max-width: 390px; line-height: 1.5; }
+
+  /* ---- phone frame ---- */
+  .phone {
+    width: 390px; height: 800px;
+    background: var(--bg);
+    border-radius: 36px;
+    border: 10px solid #1e293b;
+    overflow: hidden;
+    display: flex; flex-direction: column;
+    box-shadow: 0 24px 60px rgba(0,0,0,.5);
+  }
+  .statusbar {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 22px 4px; font-size: 12px; font-weight: 600; color: var(--ink-2);
+    background: var(--bg);
+  }
+  .screen { flex: 1; overflow-y: auto; padding: 0 14px 96px; }
+  .navbar {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    background: var(--card); border-top: 1px solid var(--line);
+    display: flex; justify-content: space-around;
+    padding: 10px 0 18px; font-size: 10px; color: var(--ink-3);
+    border-radius: 0 0 26px 26px;
+  }
+  .nav-item { text-align: center; width: 56px; }
+  .nav-item .ic { font-size: 20px; display: block; margin-bottom: 2px; }
+  .nav-item.active { color: var(--primary); font-weight: 600; }
+  .phone { position: relative; }
+
+  /* ---- slim status row (replaces AppBar + headline) ---- */
+  .toprow {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 2px 12px;
+  }
+  .toprow .date { font-size: 15px; font-weight: 700; }
+  .toprow .date small { display: block; font-size: 11px; color: var(--ink-3); font-weight: 500; }
+  .topchips { display: flex; gap: 6px; align-items: center; }
+  .chip {
+    font-size: 11px; font-weight: 600; padding: 5px 9px;
+    border-radius: 999px; background: var(--card); border: 1px solid var(--line);
+    color: var(--ink-2); display: flex; align-items: center; gap: 5px;
+  }
+  .chip .dot { width: 7px; height: 7px; border-radius: 50%; }
+  .chip.workday { background: var(--green-soft); border-color: transparent; color: #166534; }
+  .chip.workday .dot { background: var(--green); }
+  .avatar {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: var(--primary); color: #fff; font-size: 12px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* ---- running timer pill ---- */
+  .running {
+    background: #052e16; color: #ecfdf5;
+    border-radius: var(--radius);
+    padding: 14px 14px; margin-bottom: 14px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .running.idle-hide { display: none; }
+  .running .pulse { width: 9px; height: 9px; border-radius: 50%; background: #4ade80; box-shadow: 0 0 0 4px rgba(74,222,128,.25); }
+  .running .meta { flex: 1; min-width: 0; }
+  .running .proj { font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .running .task { font-size: 11px; color: #86efac; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .running .elapsed { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: .02em; }
+  .running .stop {
+    width: 40px; height: 40px; border-radius: 12px; border: none; cursor: pointer;
+    background: #dc2626; color: white; font-size: 15px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .running .lap {
+    width: 40px; height: 40px; border-radius: 12px; border: none; cursor: pointer;
+    background: rgba(255,255,255,.12); color: #ecfdf5; font-size: 15px;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* ---- idle start hero (compact, one row) ---- */
+  .start-hero {
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 12px 14px; margin-bottom: 14px;
+    display: flex; align-items: center; gap: 12px;
+    cursor: pointer;
+  }
+  .start-hero .big {
+    width: 44px; height: 44px; border-radius: 14px; border: none;
+    background: var(--primary); color: #fff; font-size: 19px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .start-hero .t1 { font-size: 14px; font-weight: 700; }
+  .start-hero .t2 { font-size: 11.5px; color: var(--ink-3); }
+  .start-hero .hint { margin-left: auto; font-size: 11px; color: var(--ink-3); text-align: right; line-height: 1.4; }
+
+  /* ---- resume strip ---- */
+  .section-head {
+    display: flex; align-items: baseline; justify-content: space-between;
+    margin: 4px 2px 8px;
+  }
+  .section-head .title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-2); }
+  .section-head .more { font-size: 12px; color: var(--primary); font-weight: 600; }
+  .resume-strip {
+    display: flex; gap: 10px; overflow-x: auto; padding-bottom: 6px;
+    scrollbar-width: none;
+  }
+  .resume-strip::-webkit-scrollbar { display: none; }
+  .rcard {
+    min-width: 168px; max-width: 168px;
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: var(--radius); padding: 11px 12px;
+    display: flex; flex-direction: column; gap: 6px;
+    position: relative;
+  }
+  .rcard .proj-row { display: flex; align-items: center; gap: 6px; }
+  .rcard .pdot { width: 9px; height: 9px; border-radius: 3px; }
+  .rcard .proj { font-size: 12.5px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rcard .task { font-size: 11.5px; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-height: 15px; }
+  .rcard .when { font-size: 10.5px; color: var(--ink-3); }
+  .rcard .play {
+    position: absolute; right: 10px; bottom: 10px;
+    width: 34px; height: 34px; border-radius: 50%; border: none; cursor: pointer;
+    background: var(--primary-soft); color: var(--primary); font-size: 15px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .rcard.fresh { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-soft); }
+  .rcard.fresh .when { color: var(--primary); font-weight: 700; }
+  .rcard.dimmed { opacity: .75; }
+  .rcard.dimmed .play { background: var(--line); color: var(--ink-3); cursor: default; }
+  .badge-fresh {
+    position: absolute; top: -7px; left: 10px;
+    background: var(--primary); color: white; font-size: 9px; font-weight: 700;
+    padding: 2px 7px; border-radius: 999px; text-transform: uppercase; letter-spacing: .05em;
+  }
+
+  /* ---- dense stats strip ---- */
+  .stats {
+    display: flex; background: var(--card); border: 1px solid var(--line);
+    border-radius: var(--radius); margin-top: 14px; overflow: hidden;
+  }
+  .stat { flex: 1; padding: 12px 8px; text-align: center; }
+  .stat + .stat { border-left: 1px solid var(--line); }
+  .stat .v { font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .stat .k { font-size: 10px; color: var(--ink-3); text-transform: uppercase; letter-spacing: .05em; margin-top: 2px; }
+
+  /* ---- week bars ---- */
+  .week { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); margin-top: 12px; padding: 12px 14px; }
+  .week .head { display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; margin-bottom: 8px; }
+  .week .head span:last-child { color: var(--ink-3); font-weight: 500; }
+  .bars { display: flex; gap: 8px; align-items: flex-end; height: 64px; }
+  .bar { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; height: 100%; gap: 4px; }
+  .bar i { display: block; border-radius: 6px 6px 2px 2px; background: var(--primary-soft); }
+  .bar.hot i { background: var(--primary); }
+  .bar b { font-size: 9px; color: var(--ink-3); font-weight: 600; text-align: center; }
+
+  /* ---- recent entries (below fold, compact rows) ---- */
+  .entries { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); margin-top: 12px; overflow: hidden; }
+  .entry { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-top: 1px solid var(--line); }
+  .entry:first-child { border-top: none; }
+  .entry .pdot { width: 9px; height: 9px; border-radius: 3px; flex-shrink: 0; }
+  .entry .meta { flex: 1; min-width: 0; }
+  .entry .proj { font-size: 12.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .entry .task { font-size: 11px; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .entry .dur { font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .entry .replay {
+    width: 30px; height: 30px; border-radius: 50%; border: none; cursor: pointer;
+    background: transparent; color: var(--primary); font-size: 13px;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .toast {
+    position: absolute; bottom: 92px; left: 14px; right: 14px;
+    background: #1e293b; color: #f1f5f9; font-size: 12px;
+    border-radius: 12px; padding: 10px 14px;
+    display: flex; align-items: center; justify-content: space-between;
+    box-shadow: 0 8px 24px rgba(0,0,0,.25);
+  }
+  .toast b { color: #93c5fd; }
+</style>
+</head>
+<body>
+  <h1>Mobile Dashboard — Redesign Preview</h1>
+  <div class="sub">Resume-first layout · no headline waste · recents update instantly on stop · one-tap restart</div>
+
+  <div class="states">
+
+    <!-- ============ STATE 1: IDLE ============ -->
+    <div class="state">
+      <div class="state-label">1 · Idle — nothing running</div>
+      <div class="phone">
+        <div class="statusbar"><span>17:42</span><span>▮▮▮ ⌁ ▰</span></div>
+        <div class="screen">
+          <div class="toprow">
+            <div class="date">Tuesday<small>Week 36 · 3 Sep 2026</small></div>
+            <div class="topchips">
+              <div class="chip workday"><span class="dot"></span>At work 6h 05m</div>
+              <div class="avatar">DG</div>
+            </div>
+          </div>
+
+          <div class="start-hero">
+            <button class="big">▶</button>
+            <div>
+              <div class="t1">Start timer</div>
+              <div class="t2">Pick project &amp; task</div>
+            </div>
+            <div class="hint">Long-press anywhere<br>= resume last task</div>
+          </div>
+
+          <div class="section-head">
+            <div class="title">Resume</div>
+            <div class="more">All projects</div>
+          </div>
+          <div class="resume-strip">
+            <div class="rcard">
+              <div class="proj-row"><span class="pdot" style="background:#2563eb"></span><span class="proj">Acme Industries</span></div>
+              <div class="task">Quarterly report draft</div>
+              <div class="when">1h 30m · 2h ago</div>
+              <button class="play">▶</button>
+            </div>
+            <div class="rcard">
+              <div class="proj-row"><span class="pdot" style="background:#16a34a"></span><span class="proj">Website relaunch</span></div>
+              <div class="task">Fix nav layout bug</div>
+              <div class="when">45m · yesterday</div>
+              <button class="play">▶</button>
+            </div>
+            <div class="rcard">
+              <div class="proj-row"><span class="pdot" style="background:#d97706"></span><span class="proj">Internal</span></div>
+              <div class="task">Team sync prep</div>
+              <div class="when">30m · yesterday</div>
+              <button class="play">▶</button>
+            </div>
+            <div class="rcard">
+              <div class="proj-row"><span class="pdot" style="background:#9333ea"></span><span class="proj">Client portal</span></div>
+              <div class="task">Invoice PDF review</div>
+              <div class="when">2h 10m · Mon</div>
+              <button class="play">▶</button>
+            </div>
+          </div>
+
+          <div class="stats">
+            <div class="stat"><div class="v">4h 12m</div><div class="k">Today</div></div>
+            <div class="stat"><div class="v">18h 40m</div><div class="k">Week</div></div>
+            <div class="stat"><div class="v">82%</div><div class="k">Billable</div></div>
+          </div>
+
+          <div class="week">
+            <div class="head"><span>This week</span><span>target 40h</span></div>
+            <div class="bars">
+              <div class="bar"><i style="height:78%"></i><b>Mo</b></div>
+              <div class="bar"><i style="height:64%"></i><b>Di</b></div>
+              <div class="bar hot"><i style="height:55%"></i><b>Mi</b></div>
+              <div class="bar"><i style="height:0%"></i><b>Do</b></div>
+              <div class="bar"><i style="height:0%"></i><b>Fr</b></div>
+              <div class="bar"><i style="height:0%"></i><b>Sa</b></div>
+              <div class="bar"><i style="height:0%"></i><b>So</b></div>
+            </div>
+          </div>
+
+          <div class="section-head" style="margin-top:14px">
+            <div class="title">Recent entries</div>
+            <div class="more">View all</div>
+          </div>
+          <div class="entries">
+            <div class="entry"><span class="pdot" style="background:#2563eb"></span>
+              <div class="meta"><div class="proj">Acme Industries</div><div class="task">Quarterly report draft · 15:02–16:32</div></div>
+              <div class="dur">1:30:00</div><button class="replay">⟳</button>
+            </div>
+            <div class="entry"><span class="pdot" style="background:#16a34a"></span>
+              <div class="meta"><div class="proj">Website relaunch</div><div class="task">Fix nav layout bug · 09:10–09:55</div></div>
+              <div class="dur">0:45:00</div><button class="replay">⟳</button>
+            </div>
+            <div class="entry"><span class="pdot" style="background:#d97706"></span>
+              <div class="meta"><div class="proj">Internal</div><div class="task">Team sync prep · Mon 16:00–16:30</div></div>
+              <div class="dur">0:30:00</div><button class="replay">⟳</button>
+            </div>
+          </div>
+        </div>
+        <div class="navbar">
+          <div class="nav-item active"><span class="ic">⌂</span>Home</div>
+          <div class="nav-item"><span class="ic">folder</span>Projects</div>
+          <div class="nav-item"><span class="ic">☰</span>Entries</div>
+          <div class="nav-item"><span class="ic">Wallet</span>Finance</div>
+          <div class="nav-item"><span class="ic">⚙</span>Settings</div>
+        </div>
+      </div>
+      <div class="state-note">No AppBar / headline. Status chips carry today + workday at a glance. Resume strip is the first content — reachable without any scroll. Start action is a slim one-row hero, not a dead card.</div>
+    </div>
+
+    <!-- ============ STATE 2: RUNNING ============ -->
+    <div class="state">
+      <div class="state-label">2 · Timer running</div>
+      <div class="phone">
+        <div class="statusbar"><span>17:42</span><span>▮▮▮ ⌁ ▰</span></div>
+        <div class="screen">
+          <div class="toprow">
+            <div class="date">Tuesday<small>Week 36 · 3 Sep 2026</small></div>
+            <div class="topchips">
+              <div class="chip workday"><span class="dot"></span>At work 6h 05m</div>
+              <div class="avatar">DG</div>
+            </div>
+          </div>
+
+          <div class="running">
+            <span class="pulse"></span>
+            <div class="meta">
+              <div class="proj">Acme Industries</div>
+              <div class="task">Quarterly report draft</div>
+            </div>
+            <div class="elapsed">00:41:07</div>
+            <button class="lap">⏸</button>
+            <button class="stop">■</button>
+          </div>
+
+          <div class="section-head">
+            <div class="title">Switch to</div>
+            <div class="more">All projects</div>
+          </div>
+          <div class="resume-strip">
+            <div class="rcard dimmed">
+              <div class="proj-row"><span class="pdot" style="background:#2563eb"></span><span class="proj">Acme Industries</span></div>
+              <div class="task">Quarterly report draft</div>
+              <div class="when">running now</div>
+              <button class="play">▶</button>
+            </div>
+            <div class="rcard">
+              <div class="proj-row"><span class="pdot" style="background:#16a34a"></span><span class="proj">Website relaunch</span></div>
+              <div class="task">Fix nav layout bug</div>
+              <div class="when">45m · yesterday</div>
+              <button class="play">▶</button>
+            </div>
+            <div class="rcard">
+              <div class="proj-row"><span class="pdot" style="background:#d97706"></span><span class="proj">Internal</span></div>
+              <div class="task">Team sync prep</div>
+              <div class="when">30m · yesterday</div>
+              <button class="play">▶</button>
+            </div>
+          </div>
+
+          <div class="stats">
+            <div class="stat"><div class="v">4h 53m</div><div class="k">Today (live)</div></div>
+            <div class="stat"><div class="v">19h 21m</div><div class="k">Week (live)</div></div>
+            <div class="stat"><div class="v">82%</div><div class="k">Billable</div></div>
+          </div>
+
+          <div class="week">
+            <div class="head"><span>This week</span><span>target 40h</span></div>
+            <div class="bars">
+              <div class="bar"><i style="height:78%"></i><b>Mo</b></div>
+              <div class="bar"><i style="height:64%"></i><b>Di</b></div>
+              <div class="bar hot"><i style="height:66%"></i><b>Mi</b></div>
+              <div class="bar"><i style="height:0%"></i><b>Do</b></div>
+              <div class="bar"><i style="height:0%"></i><b>Fr</b></div>
+              <div class="bar"><i style="height:0%"></i><b>Sa</b></div>
+              <div class="bar"><i style="height:0%"></i><b>So</b></div>
+            </div>
+          </div>
+        </div>
+        <div class="navbar">
+          <div class="nav-item active"><span class="ic">⌂</span>Home</div>
+          <div class="nav-item"><span class="ic">folder</span>Projects</div>
+          <div class="nav-item"><span class="ic">☰</span>Entries</div>
+          <div class="nav-item"><span class="ic">Wallet</span>Finance</div>
+          <div class="nav-item"><span class="ic">⚙</span>Settings</div>
+        </div>
+      </div>
+      <div class="state-note">Timer becomes a compact live pill (elapsed + pause + stop). Today/Week counters tick live. The strip becomes "Switch to" — one tap stops the current timer and starts the other combination. Today's bar grows live in the week chart.</div>
+    </div>
+
+    <!-- ============ STATE 3: JUST STOPPED ============ -->
+    <div class="state">
+      <div class="state-label">3 · Just stopped — instant feedback</div>
+      <div class="phone">
+        <div class="statusbar"><span>17:42</span><span>▮▮▮ ⌁ ▰</span></div>
+        <div class="screen">
+          <div class="toprow">
+            <div class="date">Tuesday<small>Week 36 · 3 Sep 2026</small></div>
+            <div class="topchips">
+              <div class="chip workday"><span class="dot"></span>At work 6h 05m</div>
+              <div class="avatar">DG</div>
+            </div>
+          </div>
+
+          <div class="start-hero">
+            <button class="big">▶</button>
+            <div>
+              <div class="t1">Start timer</div>
+              <div class="t2">Pick project &amp; task</div>
+            </div>
+            <div class="hint">Long-press anywhere<br>= resume last task</div>
+          </div>
+
+          <div class="section-head">
+            <div class="title">Resume</div>
+            <div class="more">All projects</div>
+          </div>
+          <div class="resume-strip">
+            <div class="rcard fresh">
+              <span class="badge-fresh">Just now</span>
+              <div class="proj-row"><span class="pdot" style="background:#2563eb"></span><span class="proj">Acme Industries</span></div>
+              <div class="task">Quarterly report draft</div>
+              <div class="when">You just worked 41m here</div>
+              <button class="play">▶</button>
+            </div>
+            <div class="rcard">
+              <div class="proj-row"><span class="pdot" style="background:#16a34a"></span><span class="proj">Website relaunch</span></div>
+              <div class="task">Fix nav layout bug</div>
+              <div class="when">45m · yesterday</div>
+              <button class="play">▶</button>
+            </div>
+            <div class="rcard">
+              <div class="proj-row"><span class="pdot" style="background:#d97706"></span><span class="proj">Internal</span></div>
+              <div class="task">Team sync prep</div>
+              <div class="when">30m · yesterday</div>
+              <button class="play">▶</button>
+            </div>
+          </div>
+
+          <div class="stats">
+            <div class="stat"><div class="v">4h 53m</div><div class="k">Today</div></div>
+            <div class="stat"><div class="v">19h 21m</div><div class="k">Week</div></div>
+            <div class="stat"><div class="v">82%</div><div class="k">Billable</div></div>
+          </div>
+
+          <div class="toast"><span><b>Acme Industries</b> stopped · 00:41:07 saved</span><span>↺ Resume</span></div>
+        </div>
+        <div class="navbar">
+          <div class="nav-item active"><span class="ic">⌂</span>Home</div>
+          <div class="nav-item"><span class="ic">folder</span>Projects</div>
+          <div class="nav-item"><span class="ic">☰</span>Entries</div>
+          <div class="nav-item"><span class="ic">Wallet</span>Finance</div>
+          <div class="nav-item"><span class="ic">⚙</span>Settings</div>
+        </div>
+      </div>
+      <div class="state-note">Stopping the timer instantly moves that combination to the front of the strip, marked "Just now", with today/week totals updated in place — no pull-to-refresh, no stale list. A toast offers one-tap undo/restart.</div>
+    </div>
+
+  </div>
+</body>
+</html>
