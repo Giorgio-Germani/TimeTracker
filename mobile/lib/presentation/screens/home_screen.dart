@@ -243,7 +243,7 @@ class _DashboardTabState extends ConsumerState<DashboardTab> {
             // Active Timer Card
             Card(
               child: InkWell(
-                onTap: timerState.isRunning
+                onTap: timerState.isActive
                     ? () => Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -257,11 +257,11 @@ class _DashboardTabState extends ConsumerState<DashboardTab> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Active Timer',
+                        timerState.isPaused ? 'Paused Timer' : 'Active Timer',
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                       const SizedBox(height: AppSpacing.sm),
-                      if (timerState.isRunning && timerState.activeTimer != null)
+                      if (timerState.isActive && timerState.activeTimer != null)
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -273,12 +273,32 @@ class _DashboardTabState extends ConsumerState<DashboardTab> {
                                   ),
                             ),
                             const SizedBox(height: AppSpacing.xs),
-                            Text(
-                              'Tap to view details',
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            if (timerState.isPaused)
+                              Row(
+                                children: [
+                                  Text(
+                                    'Paused',
+                                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                        ),
                                   ),
-                            ),
+                                  const SizedBox(width: AppSpacing.sm),
+                                  TextButton.icon(
+                                    onPressed: () => ref
+                                        .read(timerProvider.notifier)
+                                        .resumeTimer(),
+                                    icon: const Icon(Icons.play_arrow),
+                                    label: const Text('Resume'),
+                                  ),
+                                ],
+                              )
+                            else
+                              Text(
+                                'Tap to view details',
+                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                    ),
+                              ),
                           ],
                         )
                       else
