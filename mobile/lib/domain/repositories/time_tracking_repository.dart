@@ -196,7 +196,7 @@ class TimeTrackingRepository {
       await LocalStorage.saveTimer(timer);
       return timer;
     } catch (e) {
-      throw Exception('Failed to start timer: $e');
+      throw _timerActionError('start', e);
     }
   }
 
@@ -272,6 +272,23 @@ class TimeTrackingRepository {
     }
   }
 
+  /// Map a DioException from timer actions to a user-facing message.
+  /// 429 in particular must not surface as a raw DioException string — the
+  /// server rate limit used to trip because of aggressive status polling.
+  Exception _timerActionError(String action, Object e) {
+    if (e is DioException) {
+      if (e.response?.statusCode == 429) {
+        return Exception(
+            'Server rate limit reached. Wait a few seconds and try again.');
+      }
+      final data = e.response?.data;
+      if (data is Map && data['error'] is String) {
+        return Exception(data['error'] as String);
+      }
+    }
+    return Exception('Failed to $action timer: $e');
+  }
+
   /// Pause the active timer
   Future<Timer> pauseTimer() async {
     if (apiClient == null) {
@@ -287,7 +304,7 @@ class TimeTrackingRepository {
       await LocalStorage.saveTimer(timer);
       return timer;
     } catch (e) {
-      throw Exception('Failed to pause timer: $e');
+      throw _timerActionError('pause', e);
     }
   }
 
@@ -306,7 +323,7 @@ class TimeTrackingRepository {
       await LocalStorage.saveTimer(timer);
       return timer;
     } catch (e) {
-      throw Exception('Failed to resume timer: $e');
+      throw _timerActionError('resume', e);
     }
   }
 

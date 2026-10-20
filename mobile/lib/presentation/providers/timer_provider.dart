@@ -80,7 +80,10 @@ class TimerNotifier extends StateNotifier<TimerState> {
   }
 
   void _startPolling() {
-    Future.delayed(const Duration(seconds: 5), () {
+    // 30s: the elapsed display ticks locally every second, so more frequent
+    // server polls only burn the API rate limit (5s polling exhausted the
+    // 1000/hour default limit and made pause return 429).
+    Future.delayed(const Duration(seconds: 30), () {
       if (state.isActive && repository != null) {
         _loadTimerStatus(silent: true);
         _startPolling();
