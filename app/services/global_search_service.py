@@ -67,7 +67,7 @@ def run_global_search(
                 "Error searching projects",
                 extra={"event": "api_search_domain_failed", "domain": "projects"},
             )
-            errors["projects"] = str(e)
+            errors["projects"] = "Search failed"
 
     if "task" in search_types:
         try:
@@ -82,7 +82,11 @@ def run_global_search(
                 and not getattr(user, "is_scope_restricted", False)
                 and not getattr(user, "is_client_portal_user", False)
             ):
-                tasks_query = tasks_query.filter(db.or_(Task.assigned_to == user.id, Task.created_by == user.id))
+                from app.services.task_service import task_assigned_to_user_clause
+
+                tasks_query = tasks_query.filter(
+                    db.or_(task_assigned_to_user_clause(user.id), Task.created_by == user.id)
+                )
             tasks = tasks_query.limit(limit).all()
 
             for task in tasks:
@@ -102,7 +106,7 @@ def run_global_search(
                 "Error searching tasks",
                 extra={"event": "api_search_domain_failed", "domain": "tasks"},
             )
-            errors["tasks"] = str(e)
+            errors["tasks"] = "Search failed"
 
     if "client" in search_types:
         try:
@@ -134,7 +138,7 @@ def run_global_search(
                 "Error searching clients",
                 extra={"event": "api_search_domain_failed", "domain": "clients"},
             )
-            errors["clients"] = str(e)
+            errors["clients"] = "Search failed"
 
     if "entry" in search_types:
         try:
@@ -175,6 +179,6 @@ def run_global_search(
                 "Error searching time entries",
                 extra={"event": "api_search_domain_failed", "domain": "entries"},
             )
-            errors["entries"] = str(e)
+            errors["entries"] = "Search failed"
 
     return results, errors

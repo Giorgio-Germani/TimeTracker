@@ -101,15 +101,13 @@ def _parse_and_validate_start_override(raw_value, now_local):
 
 def _redirect_after_start_error():
     """Redirect back to the submitting page when the referrer is same-host; else dashboard."""
-    from urllib.parse import urlparse
+    from app.utils.safe_redirect import safe_redirect
 
-    referrer = request.referrer
-    if referrer:
-        ref = urlparse(referrer)
-        host = urlparse(request.host_url)
-        if ref.scheme in ("http", "https") and ref.netloc == host.netloc:
-            return redirect(referrer)
-    return redirect(url_for("main.dashboard"))
+    return safe_redirect(
+        request.referrer,
+        allow_absolute_same_host=True,
+        fallback=url_for("main.dashboard"),
+    )
 
 
 def _active_users_for_admin():
@@ -1605,6 +1603,10 @@ def manual_entry():
     project_id = request.args.get("project_id", type=int)
     client_id = request.args.get("client_id", type=int)
     client_id = enforce_locked_client_id(client_id)
+    # Issue #789: with a single active client the form locks client via hidden input;
+    # treat that client as selected so the project picker is not left disabled.
+    if not client_id and only_one_client and single_client is not None:
+        client_id = single_client.id
     task_id = request.args.get("task_id", type=int)
     template_id = request.args.get("template", type=int)
 
@@ -1634,6 +1636,8 @@ def manual_entry():
         project_id = request.form.get("project_id", type=int) or None
         client_id = request.form.get("client_id", type=int) or None
         client_id = enforce_locked_client_id(client_id)
+        if not client_id and only_one_client and single_client is not None:
+            client_id = single_client.id
         task_id = request.form.get("task_id", type=int) or None
         start_date = request.form.get("start_date")
         start_time = request.form.get("start_time")

@@ -302,8 +302,10 @@ def dashboard():
         .order_by(Task.due_date.asc(), Task.priority.desc())
     )
     if not current_user.is_admin:
+        from app.services.task_service import task_assigned_to_user_clause
+
         tasks_due_query = tasks_due_query.filter(
-            or_(Task.assigned_to == current_user.id, Task.created_by == current_user.id)
+            or_(task_assigned_to_user_clause(current_user.id), Task.created_by == current_user.id)
         )
     tasks_due_today = tasks_due_query.limit(5).all()
 
@@ -320,8 +322,10 @@ def dashboard():
         .order_by(Task.due_date.asc(), Task.priority.desc())
     )
     if not current_user.is_admin:
+        from app.services.task_service import task_assigned_to_user_clause
+
         upcoming_tasks_query = upcoming_tasks_query.filter(
-            or_(Task.assigned_to == current_user.id, Task.created_by == current_user.id)
+            or_(task_assigned_to_user_clause(current_user.id), Task.created_by == current_user.id)
         )
     upcoming_tasks = upcoming_tasks_query.limit(8).all()
 
@@ -887,12 +891,18 @@ def set_language():
 
     # Redirect back if referer exists, add timestamp to force reload
     referer = request.headers.get("Referer")
-    next_url = safe_redirect_target(referer, allow_absolute_same_host=True)
+    base_url = safe_redirect_target(referer, allow_absolute_same_host=True)
     # Add cache-busting parameter to ensure fresh page load
     import time
 
-    separator = "&" if "?" in next_url else "?"
-    next_url = f"{next_url}{separator}_lang_refresh={int(time.time())}"
+    separator = "&" if "?" in base_url else "?"
+    next_url = safe_redirect_target(
+        f"{base_url}{separator}_lang_refresh={int(time.time())}",
+        allow_absolute_same_host=True,
+        fallback=base_url,
+    )
+    # next_url produced by safe_redirect_target
+    # codeql[py/url-redirection]
     response = make_response(redirect(next_url))
     # Ensure no caching
     response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"

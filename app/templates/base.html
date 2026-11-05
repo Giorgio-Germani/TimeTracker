@@ -303,9 +303,13 @@
                         if (window.__ttDismissIdlePrompt) window.__ttDismissIdlePrompt();
                         if (data && data.stopped) {
                             if (window.__ttOnIdleAutoStop) window.__ttOnIdleAutoStop();
-                            var msg = (window.i18n && window.i18n.messages && window.i18n.messages.timerStoppedInactivity) || 'Timer stopped due to inactivity';
-                            if (window.toastManager && window.toastManager.warning) {
-                                window.toastManager.warning(msg, '', 5000);
+                            // Skip toast when this tab answered — respondIdle already toasted.
+                            var localAnswer = window.__ttIdleLocalAnswerPending && window.__ttIdleLocalAnswerPending();
+                            if (!localAnswer) {
+                                var msg = (window.i18n && window.i18n.messages && window.i18n.messages.timerStoppedInactivity) || 'Timer stopped due to inactivity';
+                                if (window.toastManager && window.toastManager.warning) {
+                                    window.toastManager.warning(msg, '', 5000);
+                                }
                             }
                         } else {
                             document.dispatchEvent(new CustomEvent('tt:timer-status-changed'));
@@ -645,7 +649,7 @@
                     if (link && link.href && !link.target && !link.hasAttribute('download')) {
                         const href = link.getAttribute('href');
                         // Only handle internal links
-                        if (href && !href.startsWith('#') && !href.startsWith('javascript:') && !href.startsWith('mailto:') && !href.startsWith('tel:')) {
+                        if (href && !href.startsWith('#') && !/^(javascript|data|vbscript):/i.test(href) && !href.startsWith('mailto:') && !href.startsWith('tel:')) {
                             try {
                                 const url = new URL(href, window.location.origin);
                                 // Only save if it's a same-origin navigation

@@ -7,6 +7,91 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.18.5] - 2026-10-30
+
+### Security
+
+- **Audit logs / 2FA secret (#801)** — Stop writing `two_factor_secret` (and other secret fields such as Settings API keys/client secrets and client portal credentials) into audit log `old_value`/`new_value`. Existing leaked values are scrubbed by migration `200_scrub_sensitive_audit_log_values`. TOTP remains reversible via optional Fernet encryption at rest, not hashing.
+
+### Added
+
+- **Multi-assignee tasks** — Tasks (and recurring task templates) support multiple equal assignees via `task_assignees` / `recurring_task_assignees`. Create/edit/bulk-assign UI, filters, permissions, kanban, API (`assignee_ids`, legacy `assignee_id`), and workflows updated; existing `assigned_to` values are migrated.
+
+### Fixed
+
+- **Saved filter params / CodeQL** — Use a `Map` when applying saved filter query parameters so dynamic object writes cannot overwrite built-in properties (remote property injection).
+
+### Documentation
+
+- **Version** — Bumped `setup.py` to **5.18.5**; `VERSION` and desktop/browser-extension/mobile client versions aligned.
+
+## [5.18.4] - 2026-10-28
+
+### Fixed
+
+- **CSP PDF preview (#797)** — Allow `blob:` iframes via `frame-src 'self' blob:` so PDF template previews are not blocked by Content-Security-Policy.
+- **Saved filter params** — Prevent prototype pollution when applying saved filter query parameters.
+
+### Changed
+
+- **Dependencies** — Bump black and OpenTelemetry; desktop Electron and related npm packages; Pillow; follow-redirects.
+
+### Documentation
+
+- **Email configuration** — Added a Groundmail SMTP example to the common email providers in `docs/admin/configuration/EMAIL_CONFIGURATION.md`.
+- **Version** — Bumped `setup.py` to **5.18.4**; `VERSION` and desktop/browser-extension/mobile client versions aligned.
+
+## [5.18.3] - 2026-10-22
+
+### Fixed
+
+- **Manual entry project picker with one client (#789)** — When the org has exactly one client, the client field stays pre-filled and readonly (#467 / #753), but the project picker no longer stays disabled. The #728 client→project unlock assumed a real `<select>`; a hidden auto-client now counts as already chosen.
+
+### Documentation
+
+- **Version** — Bumped `setup.py` to **5.18.3**; `VERSION` and desktop/browser-extension/mobile client versions aligned.
+
+## [5.18.2] - 2026-10-13
+
+### Security
+
+- **CodeQL / XSS / redirects** — Clear CodeQL findings; harden DOM sinks and PDF templates; block open redirects via referrer/`next`; centralize `safe_redirect`; keep 5xx API errors generic; rebuild OIDC discovery URLs from validated issuer components.
+- **Desktop (Dependabot #222)** — Override transitive `sprintf-js` with a vendored build that caps numeric precision (GHSA-hp3w-g68c-fv3c / CVE-2026-97058) until upstream publishes a fixed release.
+- **CSP** — Add nonces to remaining inline scripts.
+
+### Fixed
+
+- **Timer review / idle response** — Import `db` in timer review and idle-response handlers.
+- **Docker** — Refresh base packages and upgrade pip/setuptools.
+- **Models** — Strip UTF-8 BOMs from timesheet/time-off model modules.
+
+### Changed
+
+- **CI** — Add CodeQL workflow to resume code scanning.
+
+### Documentation
+
+- **Version** — Bumped `setup.py` to **5.18.2**; `VERSION` and desktop/browser-extension/mobile client versions aligned.
+
+## [5.18.1] - 2026-10-11
+
+### Fixed
+
+- **Idle detection (#722, #779, #781)** — Server-authoritative "Still working?" prompts with first-answer-wins tokens and idle-credit math. Client heartbeats only count real activity; stop side effects restored for idle responses. Mobile follows the same protocol; Android idle notification is actionable.
+- **Server stability** — A single eventlet worker no longer wedges on database waits; Postgres timeouts are tighter under eventlet.
+- **Edit Timer (#777)** — Confirm Changes summary renders as HTML in the edit dialog.
+- **Gusto (#778)** — Requests now send `X-Gusto-API-Version` (default `2026-06-15`, overridable with `api_version` in the integration config) instead of falling back to the minimum API version set on the Gusto app.
+
+### Changed
+
+- **CI/CD** — Release build runs only for `v*.*.*` tags on main.
+- **README** — Adds a Deploy to Railyard button (#774).
+- **Dependencies** — Werkzeug 3.1.9; desktop axios 1.20.0, undici 6.29.0, and related transitive bumps.
+
+### Documentation
+
+- **Version** — Bumped `setup.py` to **5.18.1**; `VERSION` and desktop/browser-extension/mobile client versions aligned.
+
 ## [5.18.0] - 2026-10-04
 
 ### Added
