@@ -12,6 +12,7 @@ from .attendance_compliance import (
     DailyAttendanceRecord,
 )
 from .audit_log import AuditLog
+from .bank_transaction import BankTransaction
 from .budget_alert import BudgetAlert
 from .calendar_event import CalendarEvent
 from .calendar_integration import CalendarIntegration, CalendarSyncEvent
@@ -29,6 +30,7 @@ from .comment import Comment
 from .comment_attachment import CommentAttachment
 from .contact import Contact
 from .contact_communication import ContactCommunication
+from .crm_communication_template import CrmCommunicationTemplate
 from .currency import Currency, ExchangeRate
 from .custom_field_definition import CustomFieldDefinition
 from .custom_report import CustomReportConfig
@@ -53,7 +55,8 @@ from .invoice_approval import InvoiceApproval
 from .invoice_email import InvoiceEmail
 from .invoice_image import InvoiceImage
 from .invoice_pdf_template import InvoicePDFTemplate
-from .invoice_peppol import InvoicePeppolTransmission
+from .invoice_peppol import InvoicePeppolTransmission, PeppolInboundDocument
+from .invoice_sdi import InvoiceSdiTransmission
 from .invoice_template import InvoiceTemplate
 from .issue import Issue
 from .kanban_board_template import KanbanBoardTemplate
@@ -63,9 +66,9 @@ from .lead_activity import LeadActivity
 from .link_template import LinkTemplate
 from .mileage import Mileage
 from .milestone import Milestone
-from .oauth_app import OAuthApplication, OAuthAuthorizationCode
+from .oauth_app import OAuthAccessToken, OAuthApplication, OAuthAuthorizationCode
 from .payment_gateway import PaymentGateway, PaymentTransaction
-from .payments import CreditNote, InvoiceReminderSchedule, Payment
+from .payments import CreditNote, CreditNoteItem, InvoiceReminderSchedule, Payment
 from .payroll_export_template import PayrollExportTemplate
 from .payroll_sync_log import PayrollSyncLog
 from .per_diem import PerDiem, PerDiemRate
@@ -87,6 +90,7 @@ from .recurring_block import RecurringBlock
 from .recurring_invoice import RecurringInvoice
 from .recurring_project_cost import RecurringProjectCost
 from .recurring_task import RecurringTask
+from .reminder_policy import ReminderPolicy, ReminderPolicyLevel
 from .reporting import ReportEmailSchedule, SavedReportView
 from .salesman_email_mapping import SalesmanEmailMapping
 from .saved_filter import SavedFilter
@@ -144,6 +148,8 @@ __all__ = [
     "Geofence",
     "GeofencePolicy",
     "RecurringBlock",
+    "ReminderPolicy",
+    "ReminderPolicyLevel",
     "RateOverride",
     "SavedFilter",
     "ProjectCost",
@@ -155,6 +161,7 @@ __all__ = [
     "PayrollExportTemplate",
     "PayrollSyncLog",
     "CreditNote",
+    "CreditNoteItem",
     "InvoiceReminderSchedule",
     "SavedReportView",
     "SharedReportLink",
@@ -186,6 +193,7 @@ __all__ = [
     "ApiToken",
     "OAuthApplication",
     "OAuthAuthorizationCode",
+    "OAuthAccessToken",
     "CalendarEvent",
     "BudgetAlert",
     "DataImport",
@@ -193,10 +201,13 @@ __all__ = [
     "InvoicePDFTemplate",
     "ClientPrepaidConsumption",
     "AuditLog",
+    "BankTransaction",
     "RecurringInvoice",
     "RecurringProjectCost",
     "InvoiceEmail",
     "InvoicePeppolTransmission",
+    "PeppolInboundDocument",
+    "InvoiceSdiTransmission",
     "Webhook",
     "WebhookDelivery",
     "Quote",
@@ -224,6 +235,7 @@ __all__ = [
     "PurchaseOrderItem",
     "Contact",
     "ContactCommunication",
+    "CrmCommunicationTemplate",
     "Deal",
     "DealActivity",
     "DeletedUsername",

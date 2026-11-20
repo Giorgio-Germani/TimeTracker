@@ -112,6 +112,13 @@ jobs:
         working-directory: mobile
         run: flutter test
 
+      - name: Install CocoaPods deps
+        working-directory: mobile
+        run: |
+          rm -f ios/Flutter/Generated.xcconfig ios/Flutter/flutter_export_environment.sh
+          flutter pub get
+          (cd ios && pod install --repo-update)
+
       - name: Build iOS (simulator)
         working-directory: mobile
         env:
